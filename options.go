@@ -3,36 +3,72 @@ package micro
 import (
 	"context"
 	"github.com/xdatk/micro/client"
+	"github.com/xdatk/micro/config/cmd"
 	"github.com/xdatk/micro/server"
 )
 
-// Options for micro service
 type Options struct {
-	Client client.Client
-	Server server.Server
-	// Other options for implementations of the interface
-	// can be stored in a context
-	Context context.Context
+	Cmd         cmd.Cmd
+	Client      client.Client
+	Server      server.Server
+	BeforeStart []func() error
+	BeforeStop  []func() error
+	AfterStart  []func() error
+	AfterStop   []func() error
+	Signal      bool
+	Context     context.Context
 }
 
 type Option func(*Options)
 
-// Client to be used for service
+func Cmd(c cmd.Cmd) Option {
+	return func(o *Options) {
+		o.Cmd = c
+	}
+}
+
 func Client(c client.Client) Option {
 	return func(o *Options) {
 		o.Client = c
 	}
 }
 
-// Server to be used for service
 func Server(s server.Server) Option {
 	return func(o *Options) {
 		o.Server = s
 	}
 }
 
-// Context specifies a context for the service.
-// Can be used to signal shutdown of the service and for extra option values.
+func BeforeStart(fn func() error) Option {
+	return func(o *Options) {
+		o.BeforeStart = append(o.BeforeStart, fn)
+	}
+}
+
+func BeforeStop(fn func() error) Option {
+	return func(o *Options) {
+		o.BeforeStop = append(o.BeforeStop, fn)
+	}
+}
+
+func AfterStart(fn func() error) Option {
+	return func(o *Options) {
+		o.AfterStart = append(o.AfterStart, fn)
+	}
+}
+
+func AfterStop(fn func() error) Option {
+	return func(o *Options) {
+		o.AfterStop = append(o.AfterStop, fn)
+	}
+}
+
+func HandleSignal(b bool) Option {
+	return func(o *Options) {
+		o.Signal = b
+	}
+}
+
 func Context(ctx context.Context) Option {
 	return func(o *Options) {
 		o.Context = ctx
